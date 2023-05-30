@@ -85,6 +85,7 @@ function toPercent(probability: number) {
 img{
   border-radius: 1rem;
   margin-bottom: 2rem ;
+  margin-top: 1rem;
 }
 input[type="file"] {
     display: none;
