@@ -12,46 +12,7 @@ const labels = ['Мяч для американского футбола', 'Бе
  'Шар для боулинга', 'Мяч для крикета', 'Футбольный мяч', 'Мяч для гольфа', 'Хоккейная шайба',
  'Мяч для регби', 'Воланчик', 'Мяч для настольного тенниса', 'Теннисный  мяч', 'Волейбольный мяч']
 
-const loadModel = async () => {
-  return tf.loadGraphModel("/src/assets/Balls_model_js/model.json")
-}
-
-const start = async () => {
-  const model = await loadModel()
-  let prediction = await model.predict(preprocess());
-  let predArray =  extractData(prediction.toString())
-  const conf= Math.max(...predArray)
-  chooseColor(conf)
-  const predicted = predArray.indexOf(conf);
-  confidence.value = toPercent(conf)
-  result.value = labels[predicted]
-}
-
-const chooseColor = async (conf: number) =>{
-  if (conf > 0.75)
-    color.value = '#34d94a'
-  else if (conf > 0.5)
-    color.value = '#d9d134'
-  else
-    color.value = '#d93434'
-}
-
-function extractData(prediction: string) {
-  const startIndex = prediction.indexOf('[');
-  const cleanStr = prediction.slice(startIndex).replace(/\[|\]|,/g, '');
-  const substrings = cleanStr.split(' ');
-  const floats = substrings.map(substring => parseFloat(substring));
-
-  return floats;
-}
-
-const preprocess = () => {
-  const imgTensor = tf.browser.fromPixels(imageElement.value!);
-  const imgResized = tf.image.resizeBilinear(imgTensor, [224, 224]).div(tf.scalar(255.0))
-  const imgExpanded = imgResized.expandDims();
-  return imgExpanded
-}
-function handleFileUpload(event:any) {
+ function handleFileUpload(event:any) {
   result.value = ""
   confidence.value = ""
   imageUrl.value = ""
@@ -64,10 +25,51 @@ function handleFileUpload(event:any) {
   start()
 }
 
+const loadModel = async () => {
+  return tf.loadGraphModel("/src/assets/Balls_model_js/model.json")
+}
+
+const preprocess = () => {
+  const imgTensor = tf.browser.fromPixels(imageElement.value!);
+  const imgResized = tf.image.resizeBilinear(imgTensor, [224, 224]).div(tf.scalar(255.0))
+  const imgExpanded = imgResized.expandDims();
+  return imgExpanded
+}
+
+function extractData(prediction: string) {
+  const startIndex = prediction.indexOf('[');
+  const cleanStr = prediction.slice(startIndex).replace(/\[|\]|,/g, '');
+  const substrings = cleanStr.split(' ');
+  const floats = substrings.map(substring => parseFloat(substring));
+
+  return floats;
+}
+
 function toPercent(probability: number) {
   const percent = (probability * 100).toFixed(2);
   return `Уверенность: ${percent}%`
 }
+
+const chooseColor = async (conf: number) =>{
+  if (conf > 0.75)
+    color.value = '#34d94a'
+  else if (conf > 0.5)
+    color.value = '#d9d134'
+  else
+    color.value = '#d93434'
+}
+
+const start = async () => {
+  const model = await loadModel()
+  let prediction = await model.predict(preprocess());
+  let predArray =  extractData(prediction.toString())
+  const conf= Math.max(...predArray)
+  confidence.value = toPercent(conf)
+  chooseColor(conf)
+  const predicted = predArray.indexOf(conf);
+  result.value = labels[predicted]
+}
+
 </script>
 
 <template>
